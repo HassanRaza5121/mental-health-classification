@@ -21,7 +21,7 @@ __pycache__/
 *.tmp
 *.bak
 
-# Artifacts / model outputs
+# Artifacts / model outputs in ML projects
 artifacts/
 outputs/
 models/
