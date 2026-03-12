@@ -1,10 +1,14 @@
-# Ignore virtual environment
+# =====================
+# Python / ML Project
+# =====================
+
+# Virtual environments
 .venv/
 venv/
 env/
 ENV/
 
-# Python compiled files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -12,24 +16,45 @@ __pycache__/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Pytest cache
-.pytest_cache/
-
-# Logs and temp files
+# Logs and temporary files
 *.log
 *.tmp
 *.bak
 
-# VS Code settings
-.vscode/
-
-# macOS files
-.DS_Store
-
-# Data and ML outputs (optional, if large)
-data/
-*.csv
-*.xlsx
+# Artifacts / model outputs
+artifacts/
+outputs/
+models/
 *.h5
 *.pt
 *.joblib
+
+# Data files (if you have any big dataset you don't want to push)
+data/
+*.csv
+*.xlsx
+
+# VS Code settings
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# GitHub / CI files (optional if storing local credentials)
+.github/
+
+# Python packaging / environment files
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Optional config / cache
+__pycache__/
+*.cache
+*.pkl
+*.zip
+
+# Ignore personal environment files
+*.env
