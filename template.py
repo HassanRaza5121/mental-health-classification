@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import logging
 logging.basicConfig(level=logging.INFO)
-project_name = "Stress Indicators for Mental Health classification"
+project_name = "mental_health"
 list_of_files = [
     "github/workspace/.gitkeep",
     f"src/{project_name}/__init__.py",
