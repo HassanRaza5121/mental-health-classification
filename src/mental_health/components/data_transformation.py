@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import numpy as np
 
+from sklearn.preprocessing import OrdinalEncoder
 from src.mental_health.logger import logger
 from src.mental_health.exception import CustomException
 
@@ -13,19 +14,15 @@ class Data_Transformation:
         self.train_data_path = "artifacts/train_dataset"
         self.test_data_path = "artifacts/test_dataset"
 
-        self.transformed_train_data_path = "artifacts/transformed_train_dataset"
-        self.transformed_test_data_path = "artifacts/transformed_test_dataset"
+        self.transformed_train_data_path = "artifacts/transformed_train_dataset.csv"
+        self.transformed_test_data_path = "artifacts/transformed_test_dataset.csv"
 
+        self.encoder_path = "artifacts/encoder.pkl"
 
     def handle_outliers(self, df):
-        """
-        Handle outliers using IQR capping
-        """
-
         numeric_cols = df.select_dtypes(include="number").columns
 
         for col in numeric_cols:
-
             Q1 = df[col].quantile(0.25)
             Q3 = df[col].quantile(0.75)
             IQR = Q3 - Q1
@@ -38,46 +35,53 @@ class Data_Transformation:
 
         return df
 
-
-    def encode_categorical(self, df):
-
-        categorical_cols = df.select_dtypes(include="object").columns
-
-        for col in categorical_cols:
-            df[col] = df[col].astype("category").cat.codes
-
-        return df
-
-
-    def transform_data(self, df):
-
-        df = self.handle_outliers(df)
-
-        df = self.encode_categorical(df)
-
-        return df
-
-
     def data_transformation(self):
 
         try:
-
             logger.info("Starting Data Transformation")
 
             train_df = pd.read_csv(self.train_data_path)
             test_df = pd.read_csv(self.test_data_path)
 
-            logger.info("Train and Test datasets loaded")
+            target_column = "stress_experience"
 
-            transformed_train_df = self.transform_data(train_df)
-            transformed_test_df = self.transform_data(test_df)
+            # ✅ Separate features and target
+            X_train = train_df.drop(columns=[target_column])
+            y_train = train_df[target_column]
 
+            X_test = test_df.drop(columns=[target_column])
+            y_test = test_df[target_column]
+
+            # ✅ Handle outliers only on features
+            X_train = self.handle_outliers(X_train)
+            X_test = self.handle_outliers(X_test)
+
+            # ✅ Encode categorical columns properly
+            categorical_cols = X_train.select_dtypes(include="object").columns
+
+            encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+
+            X_train[categorical_cols] = encoder.fit_transform(X_train[categorical_cols])
+            X_test[categorical_cols] = encoder.transform(X_test[categorical_cols])
+
+            # ✅ Fix labels for models (IMPORTANT)
+            y_train = y_train.astype(int) - 1
+            y_test = y_test.astype(int) - 1
+
+            # ✅ Save encoder
             os.makedirs("artifacts", exist_ok=True)
+            import pickle
+            with open(self.encoder_path, "wb") as f:
+                pickle.dump(encoder, f)
 
-            transformed_train_df.to_csv(self.transformed_train_data_path, index=False)
-            transformed_test_df.to_csv(self.transformed_test_data_path, index=False)
+            # ✅ Combine back
+            train_processed = pd.concat([X_train, y_train], axis=1)
+            test_processed = pd.concat([X_test, y_test], axis=1)
 
-            logger.info("Transformed datasets saved successfully")
+            train_processed.to_csv(self.transformed_train_data_path, index=False)
+            test_processed.to_csv(self.transformed_test_data_path, index=False)
+
+            logger.info("Data Transformation Completed")
 
             return (
                 self.transformed_train_data_path,
@@ -85,5 +89,4 @@ class Data_Transformation:
             )
 
         except Exception as e:
-            logger.error("Error during data transformation")
             raise CustomException(e, sys)
